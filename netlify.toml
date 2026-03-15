@@ -1,0 +1,25 @@
+# netlify.toml — Konfigurasi deploy Netlify
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# PENTING: Paksa Node 18 agar native fetch tersedia di Functions
+# Tanpa ini bisa mendapat Node 16 yang tidak punya fetch bawaan
+[functions]
+  node_bundler = "esbuild"
+
+[context.production.environment]
+  NODE_VERSION = "18"
+
+# Timeout diperpanjang ke 26 detik (maksimal tier gratis Netlify)
+# Tiap API call dengan web_search bisa butuh 15-25 detik
+[functions."proxy"]
+  timeout = 26
+
+# Security headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
