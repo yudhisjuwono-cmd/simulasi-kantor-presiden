@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Situasi Room Presiden RI — Dashboard Kebijakan Nasional</title>
+  <meta name="description" content="Dashboard monitoring indikator nasional real-time berbasis pencarian publik terkini untuk simulasi kebijakan presiden." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-sans: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'DM Mono', 'Courier New', monospace;
+
+      /* Light mode */
+      --ink: #1a1a18;
+      --ink-muted: #6b6b66;
+      --ink-faint: #9b9b94;
+      --bg: #ffffff;
+      --bg2: #f5f4f0;
+      --border: rgba(26,26,24,0.12);
+      --border-strong: rgba(26,26,24,0.35);
+
+      --crisis:     #b91c1c;
+      --crisis-bg:  #fef2f2;
+      --crisis-bd:  #fca5a5;
+      --waspada:    #92400e;
+      --waspada-bg: #fffbeb;
+      --waspada-bd: #fcd34d;
+      --stabil:     #14532d;
+      --stabil-bg:  #f0fdf4;
+      --stabil-bd:  #86efac;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e8e6de;
+        --ink-muted: #9b9a93;
+        --ink-faint: #6b6a64;
+        --bg: #18181a;
+        --bg2: #222224;
+        --border: rgba(232,230,222,0.1);
+        --border-strong: rgba(232,230,222,0.3);
+
+        --crisis:     #fca5a5;
+        --crisis-bg:  #2d1a1a;
+        --crisis-bd:  #991b1b;
+        --waspada:    #fcd34d;
+        --waspada-bg: #2a2000;
+        --waspada-bd: #92400e;
+        --stabil:     #86efac;
+        --stabil-bg:  #052e16;
+        --stabil-bd:  #14532d;
+      }
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    a:hover {
+      opacity: 0.75;
+    }
+
+    /* ============================================================
+       LAYOUT
+    ============================================================ */
+    .page-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem 3rem;
+    }
+
+    /* ============================================================
+       HEADER
+    ============================================================ */
+    .header {
+      padding: 2rem 0 1.25rem;
+      border-bottom: 2px solid var(--ink);
+      margin-bottom: 0;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .header-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      margin-bottom: 6px;
+    }
+
+    .header-title {
+      font-family: var(--font-display);
+      font-size: clamp(26px, 4vw, 38px);
+      font-weight: 900;
+      line-height: 1.05;
+      color: var(--ink);
+    }
+
+    .header-subtitle {
+      font-size: 13px;
+      color: var(--ink-muted);
+      margin-top: 8px;
+      max-width: 480px;
+    }
+
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn-refresh {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 10px 20px;
+      border: 1.5px solid var(--ink);
+      background: var(--ink);
+      color: var(--bg);
+      cursor: pointer;
+      border-radius: 2px;
+      transition: background 0.15s, color 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    .btn-refresh:hover:not(:disabled) {
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    .btn-refresh:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-refresh .icon-refresh {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      transition: transform 0.6s linear;
+    }
+
+    .btn-refresh.spinning .icon-refresh {
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .timestamp {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--ink-faint);
+      text-align: right;
+    }
+
+    /* ============================================================
+       SECTION LABELS
+    ============================================================ */
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      padding: 1.25rem 0 0.75rem;
+      border-top: 0.5px solid var(--border);
+      margin-top: 1.75rem;
+    }
+
+    /* ============================================================
+       SUMMARY BAR
+    ============================================================ */
+    .summary-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border: 1px solid var(--border-strong);
+      gap: 0;
+    }
+
+    .summary-item {
+      padding: 1rem 1.25rem;
+      text-align: center;
+      border-right: 0.5px solid var(--border);
+    }
+
+    .summary-item:last-child {
+      border-right: none;
+    }
+
+    .summary-count {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+      transition: color 0.3s;
+    }
+
+    .summary-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      margin-top: 4px;
+    }
+
+    .c-crisis  { color: var(--crisis); }
+    .c-waspada { color: var(--waspada); }
+    .c-stabil  { color: var(--stabil); }
+
+    /* ============================================================
+       INDICATOR GRID
+    ============================================================ */
+    .indicators-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      border: 1px solid var(--border-strong);
+      /* gap=0 with background border trick */
+      gap: 0;
+      background: var(--border);
+    }
+
+    /* Each card separated by 1px background showing through */
+    .indicator-card {
+      background: var(--bg);
+      padding: 1rem 1.125rem;
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: background 0.2s;
+      outline: 1px solid var(--border);
+    }
+
+    .ind-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ind-name {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      flex: 1;
+    }
+
+    /* Status badges */
+    .status-badge {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 500;
+      padding: 2px 7px;
+      border-radius: 2px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+      border: 1px solid;
+    }
+
+    .badge-KRISIS  { background: var(--crisis-bg);  color: var(--crisis);  border-color: var(--crisis-bd); }
+    .badge-WASPADA { background: var(--waspada-bg); color: var(--waspada); border-color: var(--waspada-bd); }
+    .badge-STABIL  { background: var(--stabil-bg);  color: var(--stabil);  border-color: var(--stabil-bd); }
+    .badge-MEMUAT  { background: var(--bg2); color: var(--ink-faint); border-color: var(--border); }
+
+    .ind-headline {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      line-height: 1.45;
+      margin-top: 2px;
+    }
+
+    .ind-sources {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .ind-source-item {
+      font-size: 11px;
+      color: var(--ink-muted);
+      display: flex;
+      align-items: flex-start;
+      gap: 5px;
+      line-height: 1.4;
+    }
+
+    .ind-source-item::before {
+      content: '–';
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--ink-faint);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .ind-source-link {
+      color: var(--ink-muted);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      word-break: break-word;
+    }
+
+    .ind-source-link:hover {
+      color: var(--ink);
+    }
+
+    .ind-loading {
+      font-size: 12px;
+      color: var(--ink-faint);
+      font-style: italic;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .ind-error {
+      font-size: 12px;
+      color: var(--crisis);
+      margin-top: 4px;
+    }
+
+    /* ============================================================
+       LOADING DOTS
+    ============================================================ */
+    .dots {
+      display: inline-flex;
+      gap: 3px;
+      align-items: center;
+    }
+
+    .dots span {
+      width: 4px;
+      height: 4px;
+      background: var(--ink-faint);
+      border-radius: 50%;
+      animation: blink 1.2s ease-in-out infinite;
+      display: inline-block;
+    }
+
+    .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.15; }
+      40%            { opacity: 1; }
+    }
+
+    /* ============================================================
+       BRIEF BOX
+    ============================================================ */
+    .brief-box {
+      border: 1.5px solid var(--ink);
+      padding: 1.5rem;
+      background: var(--bg);
+    }
+
+    .brief-president-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    .brief-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--bg);
+    }
+
+    .brief-role-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+    }
+
+    .brief-role-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      margin-top: 2px;
+    }
+
+    #brief-content {
+      font-size: 14px;
+      line-height: 1.85;
+      color: var(--ink);
+      white-space: pre-wrap;
+    }
+
+    #brief-content.brief-loading {
+      color: var(--ink-muted);
+      font-style: italic;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brief-actions {
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 0.5px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .brief-btn {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border: 1px solid var(--border-strong);
+      background: transparent;
+      cursor: pointer;
+      color: var(--ink-muted);
+      border-radius: 2px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .brief-btn:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+
+    /* ============================================================
+       PROGRESS BAR
+    ============================================================ */
+    .progress-wrap {
+      height: 2px;
+      background: var(--border);
+      margin-top: 0.5rem;
+      overflow: hidden;
+      border-radius: 1px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--ink);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    .footer {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--ink-faint);
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 0.5px solid var(--border);
+      line-height: 1.7;
+    }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 600px) {
+      .header-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .header-right {
+        align-items: flex-start;
+      }
+
+      .timestamp {
+        text-align: left;
+      }
+
+      .summary-bar {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .summary-count {
+        font-size: 24px;
+      }
+
+      .indicators-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-wrap">
+
+    <!-- ========================================================
+         HEADER
+    ========================================================= -->
+    <header class="header">
+      <div class="header-inner">
+        <div>
+          <div class="header-eyebrow">Pusat Kendali Kebijakan Nasional · Republik Indonesia</div>
+          <h1 class="header-title">Situasi Room<br>Presiden RI</h1>
+          <p class="header-subtitle">
+            Monitoring 15 indikator sektoral real-time berbasis pencarian publik terkini —
+            berita media, jurnal akademik, lembaga kajian, dan NGO.
+          </p>
+        </div>
+        <div class="header-right">
+          <button class="btn-refresh" id="btn-refresh" onclick="startRefresh()" aria-label="Refresh semua data indikator">
+            <svg class="icon-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+              <path d="M21 3v5h-5"/>
+              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+              <path d="M8 16H3v5"/>
+            </svg>
+            Refresh Data
+          </button>
+          <div class="timestamp" id="timestamp" aria-live="polite">Belum dimuat</div>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="progress-wrap" role="progressbar" aria-label="Progress pengambilan data" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progress-wrap">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+    </header>
+
+    <!-- ========================================================
+         SUMMARY BAR
+    ========================================================= -->
+    <div class="section-label">Ringkasan Status Indikator</div>
+    <div class="summary-bar" role="region" aria-label="Ringkasan status">
+      <div class="summary-item">
+        <div class="summary-count c-crisis" id="count-krisis" aria-label="Jumlah indikator krisis">—</div>
+        <div class="summary-label">Krisis</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-count c-waspada" id="count-waspada" aria-label="Jumlah indikator waspada">—</div>
+        <div class="summary-label">Waspada</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-count c-stabil" id="count-stabil" aria-label="Jumlah indikator stabil">—</div>
+        <div class="summary-label">Stabil</div>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         INDICATOR GRID
+    ========================================================= -->
+    <div class="section-label">Panel Indikator Sektoral</div>
+    <div class="indicators-grid" id="indicators-grid" role="region" aria-label="Panel indikator sektoral"></div>
+
+    <!-- ========================================================
+         BRIEF KEBIJAKAN
+    ========================================================= -->
+    <div class="section-label">Brief Kebijakan &amp; Arahan Presiden</div>
+    <div class="brief-box" role="region" aria-label="Brief kebijakan presiden">
+      <div class="brief-president-row">
+        <div class="brief-avatar" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brief-role-label">Presiden Republik Indonesia</div>
+          <div class="brief-role-name">Arahan &amp; Kebijakan Negara — Berdasarkan Data Terkini</div>
+        </div>
+      </div>
+
+      <div id="brief-content" class="brief-loading" aria-live="polite">
+        <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
+        Menunggu data indikator selesai dimuat...
+      </div>
+
+      <div class="brief-actions" id="brief-actions" style="display: none;">
+        <button class="brief-btn" onclick="askFollowUp('Jelaskan lebih detail indikator yang berstatus Krisis dan tindakan darurat yang diperlukan')">
+          → Detail Krisis
+        </button>
+        <button class="brief-btn" onclick="askFollowUp('Apa landasan hukum dan perundangan RI yang relevan dengan kebijakan yang dikeluarkan presiden ini?')">
+          → Landasan Hukum
+        </button>
+        <button class="brief-btn" onclick="askFollowUp('Buat simulasi dampak kebijakan ini terhadap rakyat dalam 30 hari ke depan')">
+          → Simulasi Dampak
+        </button>
+        <button class="brief-btn" onclick="askFollowUp('Siapa saja menteri dan lembaga yang harus dipanggil rapat koordinasi darurat berdasarkan situasi ini?')">
+          → Rapat Koordinasi
+        </button>
+        <button class="brief-btn" onclick="askFollowUp('Buat komunike resmi kepada DPR RI mengenai situasi nasional saat ini')">
+          → Komunike ke DPR
+        </button>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         FOOTER
+    ========================================================= -->
+    <div class="footer" role="contentinfo">
+      <strong>Sumber data:</strong> Pencarian publik real-time melalui Anthropic Web Search API — mencakup media massa nasional (Kompas, Tempo, CNN Indonesia, CNBC Indonesia, Detik, Republika), jurnal akademik (LIPI, BRIN, UI, UGM, ITB), lembaga kajian (CSIS Indonesia, SMERU, INDEF, Paramadita), dan NGO (Transparency International Indonesia, ICW, WALHI). Tidak ada data yang di-cache. Setiap refresh mengambil informasi terbaru yang tersedia bebas di internet.
+      <br/><br/>
+      <strong>Catatan:</strong> Dashboard ini adalah alat simulasi edukatif untuk memahami dinamika kebijakan publik. Bukan sistem pemerintahan resmi. API Key Anthropic diperlukan — masukkan melalui variabel <code>ANTHROPIC_API_KEY</code> atau input di halaman.
+    </div>
+
+  </div><!-- end .page-wrap -->
+
+
+  <!-- ============================================================
+       JAVASCRIPT
+  ============================================================ -->
+  <script>
+    /*
+     * ============================================================
+     * CONFIGURATION
+     * ============================================================
+     * IMPORTANT: Do NOT hardcode your API key in this file if
+     * this repository is public. Instead, use one of:
+     *   1. A backend proxy (recommended for production)
+     *   2. A private GitHub repo + Netlify/Vercel env variable
+     *   3. Input it at runtime via the prompt below
+     *
+     * For GitHub Pages (static hosting), the key will be visible
+     * in network requests. Use a proxy for production.
+     * ============================================================
+     */
+
+    // API key dikelola sepenuhnya oleh proxy server (netlify/functions/proxy.js)
+
+    // ── Model to use
+    const MODEL = 'claude-sonnet-4-6';
+
+    // ── Endpoint: Netlify proxy (API key tersimpan aman di server)
+    const API_URL = '/.netlify/functions/proxy';
+
+    // ── Max concurrent requests (avoid rate limit)
+    const BATCH_SIZE = 3;
+
+    // ── 15 indicators with rich, multi-source search queries
+    const INDICATORS = [
+      {
+        id: 'beras',
+        name: 'Harga & Pasokan Beras',
+        query: 'harga beras Indonesia terbaru 2025 site:kompas.com OR site:tempo.co OR site:cnbcindonesia.com OR site:bps.go.id OR site:bulog.co.id',
+      },
+      {
+        id: 'energi',
+        name: 'Energi & BBM',
+        query: 'harga BBM Pertamina pasokan energi listrik PLN Indonesia 2025 site:cnbcindonesia.com OR site:esdm.go.id OR site:tempo.co OR site:iesr.or.id',
+      },
+      {
+        id: 'inflasi',
+        name: 'Inflasi & Daya Beli',
+        query: 'inflasi Indonesia BPS daya beli masyarakat 2025 site:bps.go.id OR site:bi.go.id OR site:indef.or.id OR site:kompas.com',
+      },
+      {
+        id: 'rupiah',
+        name: 'Nilai Tukar Rupiah',
+        query: 'kurs rupiah dolar AS Bank Indonesia cadangan devisa 2025 site:bi.go.id OR site:cnbcindonesia.com OR site:reuters.com OR site:bloomberg.com',
+      },
+      {
+        id: 'kemiskinan',
+        name: 'Kemiskinan & Ketimpangan',
+        query: 'kemiskinan ketimpangan gini ratio Indonesia 2025 site:bps.go.id OR site:smeru.or.id OR site:worldbank.org OR site:undp.org OR site:kompas.com',
+      },
+      {
+        id: 'pengangguran',
+        name: 'Ketenagakerjaan',
+        query: 'pengangguran lapangan kerja PHK Indonesia 2025 site:bps.go.id OR site:indef.or.id OR site:cnbcindonesia.com OR site:liputan6.com',
+      },
+      {
+        id: 'investasi',
+        name: 'Investasi & Ekonomi',
+        query: 'investasi asing FDI pertumbuhan ekonomi GDP Indonesia 2025 site:bkpm.go.id OR site:bi.go.id OR site:indef.or.id OR site:cnbcindonesia.com',
+      },
+      {
+        id: 'pangan',
+        name: 'Ketahanan Pangan',
+        query: 'ketahanan pangan impor pangan Indonesia kekeringan El Nino 2025 site:fao.org OR site:pertanian.go.id OR site:tempo.co OR site:smeru.or.id',
+      },
+      {
+        id: 'kesehatan',
+        name: 'Kesehatan Publik',
+        query: 'wabah penyakit BPJS kesehatan masyarakat Indonesia 2025 site:kemkes.go.id OR site:who.int OR site:tempo.co OR site:litbang.kemkes.go.id',
+      },
+      {
+        id: 'bencana',
+        name: 'Bencana Alam',
+        query: 'bencana alam gempa banjir erupsi gunung berapi Indonesia 2025 site:bnpb.go.id OR site:bmkg.go.id OR site:kompas.com OR site:cnnindonesia.com',
+      },
+      {
+        id: 'keamanan',
+        name: 'Keamanan & Ketertiban',
+        query: 'keamanan nasional terorisme konflik sosial Papua Indonesia 2025 site:bnpt.go.id OR site:hrw.org OR site:tempo.co OR site:kompas.com',
+      },
+      {
+        id: 'korupsi',
+        name: 'Korupsi & Tata Kelola',
+        query: 'korupsi KPK tata kelola pemerintahan Indonesia 2025 site:kpk.go.id OR site:ti.or.id OR site:icw.or.id OR site:transparency.org OR site:tempo.co',
+      },
+      {
+        id: 'luarnegeri',
+        name: 'Hubungan Luar Negeri',
+        query: 'diplomasi Indonesia ASEAN geopolitik hubungan luar negeri 2025 site:kemlu.go.id OR site:csis.or.id OR site:thejakartapost.com OR site:reuters.com',
+      },
+      {
+        id: 'pendidikan',
+        name: 'Pendidikan & SDM',
+        query: 'pendidikan Indonesia PISA literasi kualitas SDM 2025 site:kemdikbud.go.id OR site:oecd.org OR site:smeru.or.id OR site:unicef.org OR site:kompas.com',
+      },
+      {
+        id: 'lingkungan',
+        name: 'Lingkungan & Iklim',
+        query: 'lingkungan hidup deforestasi perubahan iklim polusi Indonesia 2025 site:klhk.go.id OR site:walhi.or.id OR site:greenpeace.org OR site:mongabay.co.id',
+      },
+    ];
+
+    // ── State
+    let indicatorResults = {};  // { [id]: { status, headline, sources, name } }
+    let isRefreshing = false;
+    let completedCount = 0;
+
+    // ── DOM helpers (cached after DOMContentLoaded)
+    const $ = (id) => document.getElementById(id);
+
+    // ============================================================
+    // RENDER: initial loading skeleton for all cards
+    // ============================================================
+    function renderInitialGrid() {
+      const grid = $('indicators-grid');
+      if (!grid) return;
+
+      grid.innerHTML = INDICATORS.map((ind) => `
+        <div class="indicator-card" id="card-${ind.id}" aria-label="Indikator ${ind.name}">
+          <div class="ind-header">
+            <div class="ind-name">${escapeHtml(ind.name)}</div>
+            <span class="status-badge badge-MEMUAT">Memuat</span>
+          </div>
+          <div class="ind-loading">
+            <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
+            Mencari data terbaru...
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================================
+    // RENDER: update a single card after data arrives
+    // ============================================================
+    function renderCard(ind, result) {
+      const card = $(`card-${ind.id}`);
+      if (!card) return;
+
+      const badgeClass = `badge-${result.status}`;
+      const statusText = result.status || 'WASPADA';
+
+      // Build sources HTML — validate URLs before rendering
+      const sourcesHtml = (Array.isArray(result.sources) ? result.sources : [])
+        .slice(0, 5)
+        .filter((s) => s && s.title)
+        .map((s) => {
+          const safeUrl = isValidUrl(s.url) ? s.url : '#';
+          const target = safeUrl === '#' ? '' : 'target="_blank" rel="noopener noreferrer"';
+          return `<div class="ind-source-item">
+            <a class="ind-source-link" href="${escapeHtml(safeUrl)}" ${target}>${escapeHtml(s.title)}</a>
+          </div>`;
+        })
+        .join('');
+
+      card.innerHTML = `
+        <div class="ind-header">
+          <div class="ind-name">${escapeHtml(ind.name)}</div>
+          <span class="status-badge ${badgeClass}">${escapeHtml(statusText)}</span>
+        </div>
+        <div class="ind-headline">${escapeHtml(result.headline || 'Data tidak tersedia')}</div>
+        <div class="ind-sources">${sourcesHtml || '<div class="ind-loading">Sumber tidak ditemukan</div>'}</div>
+      `;
+    }
+
+    // ============================================================
+    // RENDER: update summary counts
+    // ============================================================
+    function updateSummary() {
+      const statuses = Object.values(indicatorResults).map((r) => r.status);
+      const el = (id) => $(id);
+      el('count-krisis').textContent  = statuses.filter((s) => s === 'KRISIS').length;
+      el('count-waspada').textContent = statuses.filter((s) => s === 'WASPADA').length;
+      el('count-stabil').textContent  = statuses.filter((s) => s === 'STABIL').length;
+    }
+
+    // ============================================================
+    // UPDATE: progress bar
+    // ============================================================
+    function updateProgress(done, total) {
+      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+      const bar = $('progress-bar');
+      const wrap = $('progress-wrap');
+      if (bar) bar.style.width = `${pct}%`;
+      if (wrap) {
+        wrap.setAttribute('aria-valuenow', pct);
+      }
+    }
+
+    // ============================================================
+    // API CALL: fetch one indicator
+    // ============================================================
+    async function fetchIndicator(ind) {
+      const card = $(`card-${ind.id}`);
+
+      const systemPrompt = `Kamu adalah analis intelijen strategis negara yang bertugas memantau kondisi Indonesia.
+Lakukan pencarian web secara menyeluruh untuk indikator yang diberikan.
+Prioritaskan sumber dari: media nasional terpercaya (Kompas, Tempo, CNN Indonesia, CNBC Indonesia, Republika, Detik, The Jakarta Post), jurnal akademik dan lembaga riset (LIPI, BRIN, SMERU, INDEF, CSIS Indonesia, Paramadita), lembaga internasional (World Bank, IMF, UNDP, WHO, FAO, OECD), dan NGO kredibel (ICW, Transparency International Indonesia, WALHI, HRW, Amnesty International Indonesia).
+
+Kembalikan HANYA JSON valid (tanpa markdown, tanpa kode blok, tanpa komentar) dengan format PERSIS ini:
+{
+  "status": "KRISIS",
+  "headline": "Ringkasan situasi 2-3 kalimat berdasarkan data terkini yang ditemukan.",
+  "sources": [
+    {"title": "Judul berita atau laporan singkat", "url": "https://url-sumber.com/artikel"},
+    {"title": "Judul berita atau laporan singkat", "url": "https://url-sumber.com/artikel"},
+    {"title": "Judul berita atau laporan singkat", "url": "https://url-sumber.com/artikel"},
+    {"title": "Judul berita atau laporan singkat", "url": "https://url-sumber.com/artikel"},
+    {"title": "Judul berita atau laporan singkat", "url": "https://url-sumber.com/artikel"}
+  ]
+}
+
+Aturan status:
+- KRISIS: situasi mengancam, darurat, angka memburuk tajam, ada ancaman nyata.
+- WASPADA: ada tekanan signifikan atau tren negatif yang perlu perhatian khusus.
+- STABIL: kondisi normal, membaik, atau terkendali.
+
+Gunakan berita dan data PALING TERKINI. Sumber harus beragam (min. 3 domain berbeda). Kembalikan HANYA JSON.`;
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: MODEL,
+            max_tokens: 1000,
+            tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+            system: systemPrompt,
+            messages: [
+              {
+                role: 'user',
+                content: `Analisis indikator: "${ind.name}"\nQuery pencarian: "${ind.query}"\n\nCari data terbaru dari berbagai sumber kredibel dan kembalikan analisis dalam format JSON yang ditentukan.`,
+              },
+            ],
+          }),
+        });
+
+        // Handle HTTP errors
+        if (!response.ok) {
+          const errBody = await response.text().catch(() => '');
+          throw new Error(`HTTP ${response.status}: ${errBody.slice(0, 120)}`);
+        }
+
+        const data = await response.json();
+
+        // Extract text content from response (may have tool_use blocks mixed in)
+        let resultText = '';
+        if (Array.isArray(data.content)) {
+          for (const block of data.content) {
+            if (block.type === 'text' && typeof block.text === 'string') {
+              resultText += block.text;
+            }
+          }
+        }
+
+        // Strip any accidental markdown fences
+        resultText = resultText
+          .replace(/```json\s*/gi, '')
+          .replace(/```\s*/g, '')
+          .trim();
+
+        // Parse JSON — find the first { } block if extra text got in
+        const jsonMatch = resultText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error('Respons AI tidak mengandung JSON valid');
+
+        const parsed = JSON.parse(jsonMatch[0]);
+
+        // Validate required fields
+        if (!parsed.status || !['KRISIS', 'WASPADA', 'STABIL'].includes(parsed.status)) {
+          parsed.status = 'WASPADA'; // safe default
+        }
+        if (!parsed.headline) parsed.headline = 'Data berhasil diambil namun ringkasan tidak tersedia.';
+        if (!Array.isArray(parsed.sources)) parsed.sources = [];
+
+        // Store result
+        indicatorResults[ind.id] = { ...parsed, name: ind.name };
+
+        // Render card
+        renderCard(ind, parsed);
+
+      } catch (err) {
+        console.error(`[${ind.id}] Error:`, err);
+
+        // Store a fallback result so summary counts still work
+        indicatorResults[ind.id] = {
+          status: 'WASPADA',
+          name: ind.name,
+          headline: 'Gagal memuat data untuk indikator ini.',
+          sources: [],
+        };
+
+        // Render error state on card
+        if (card) {
+          card.innerHTML = `
+            <div class="ind-header">
+              <div class="ind-name">${escapeHtml(ind.name)}</div>
+              <span class="status-badge badge-WASPADA">Waspada</span>
+            </div>
+            <div class="ind-error">Gagal memuat: ${escapeHtml(String(err.message).slice(0, 100))}</div>
+            <div class="ind-loading" style="margin-top:6px">Coba refresh ulang untuk mengambil data kembali.</div>
+          `;
+        }
+      }
+
+      // Increment progress regardless of success/fail
+      completedCount++;
+      updateProgress(completedCount, INDICATORS.length);
+      updateSummary();
+    }
+
+    // ============================================================
+    // API CALL: generate presidential brief
+    // ============================================================
+    async function generateBrief() {
+      const briefEl = $('brief-content');
+      if (!briefEl) return;
+
+      briefEl.className = 'brief-loading';
+      briefEl.innerHTML = `
+        <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
+        Presiden sedang membaca laporan situasi nasional...
+      `;
+      $('brief-actions').style.display = 'none';
+
+      // Build summary from collected results
+      const krisisInds  = INDICATORS.filter((i) => indicatorResults[i.id]?.status === 'KRISIS');
+      const waspadaInds = INDICATORS.filter((i) => indicatorResults[i.id]?.status === 'WASPADA');
+      const stabilInds  = INDICATORS.filter((i) => indicatorResults[i.id]?.status === 'STABIL');
+
+      const summary = INDICATORS.map((i) => {
+        const r = indicatorResults[i.id];
+        if (!r) return `- ${i.name}: Data tidak tersedia`;
+        return `- ${i.name}: ${r.status} — ${r.headline}`;
+      }).join('\n');
+
+      const briefSystemPrompt = `Kamu adalah Presiden Republik Indonesia yang baru saja menerima laporan situasi nasional dari tim intelijen dan analitik negara.
+Berdasarkan laporan tersebut, buat BRIEF KEBIJAKAN PRESIDEN yang:
+1. Dimulai dengan PENILAIAN SITUASI — gambaran kondisi nasional secara menyeluruh (2-3 kalimat tegas).
+2. PRIORITAS KEBIJAKAN — 3-5 instruksi konkret kepada kementerian/lembaga terkait. Sebutkan nama lembaga spesifik dan tindakan yang harus diambil. Jika relevan, sebut payung hukumnya (UU, Perpres, PP).
+3. PERNYATAAN KEPADA RAKYAT — 1-2 kalimat komitmen dan harapan kepada seluruh rakyat Indonesia.
+Gunakan bahasa resmi kenegaraan yang lugas, berwibawa, namun mudah dipahami publik. Total 200-280 kata.`;
+
+      const briefUserMsg = `Laporan Situasi Nasional:\n\n${summary}\n\n---\nRingkasan: ${krisisInds.length} indikator KRISIS (${krisisInds.map((i) => i.name).join(', ') || 'tidak ada'}), ${waspadaInds.length} WASPADA, ${stabilInds.length} STABIL.\n\nBuat brief kebijakan presiden berdasarkan situasi ini.`;
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: MODEL,
+            max_tokens: 1000,
+            system: briefSystemPrompt,
+            messages: [{ role: 'user', content: briefUserMsg }],
+          }),
+        });
+
+        if (!response.ok) {
+          const errBody = await response.text().catch(() => '');
+          throw new Error(`HTTP ${response.status}: ${errBody.slice(0, 120)}`);
+        }
+
+        const data = await response.json();
+
+        const text = (Array.isArray(data.content) ? data.content : [])
+          .filter((b) => b.type === 'text' && typeof b.text === 'string')
+          .map((b) => b.text)
+          .join('');
+
+        briefEl.className = '';
+        briefEl.style.cssText = 'font-size:14px;line-height:1.85;color:var(--ink);white-space:pre-wrap;';
+        briefEl.textContent = text;
+        $('brief-actions').style.display = 'flex';
+
+      } catch (err) {
+        console.error('[brief] Error:', err);
+        briefEl.className = '';
+        briefEl.style.cssText = 'font-size:14px;color:var(--ink-muted);font-style:italic;';
+        briefEl.textContent = `Gagal menghasilkan brief kebijakan: ${err.message}. Silakan coba refresh kembali.`;
+      }
+    }
+
+    // ============================================================
+    // MAIN: refresh all data
+    // ============================================================
+    async function startRefresh() {
+      if (isRefreshing) return;
+
+      // Proxy server menangani autentikasi — tidak ada key di sisi browser
+
+      isRefreshing = true;
+      completedCount = 0;
+
+      // Disable button
+      const btn = $('btn-refresh');
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('spinning');
+      }
+
+      // Reset state
+      indicatorResults = {};
+      renderInitialGrid();
+      updateProgress(0, INDICATORS.length);
+
+      // Reset summary
+      ['count-krisis', 'count-waspada', 'count-stabil'].forEach((id) => {
+        const el = $(id);
+        if (el) el.textContent = '—';
+      });
+
+      // Set timestamp
+      const now = new Date();
+      const tsEl = $('timestamp');
+      if (tsEl) {
+        tsEl.textContent = `Sesi: ${now.toLocaleDateString('id-ID', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+        })} — ${now.toLocaleTimeString('id-ID')} WIB`;
+      }
+
+      // Reset brief
+      const briefEl = $('brief-content');
+      if (briefEl) {
+        briefEl.className = 'brief-loading';
+        briefEl.style.cssText = '';
+        briefEl.innerHTML = `
+          <div class="dots" aria-hidden="true"><span></span><span></span><span></span></div>
+          Menunggu data indikator selesai dimuat...
+        `;
+      }
+      const briefActions = $('brief-actions');
+      if (briefActions) briefActions.style.display = 'none';
+
+      // Fetch all indicators in batches
+      for (let i = 0; i < INDICATORS.length; i += BATCH_SIZE) {
+        const batch = INDICATORS.slice(i, i + BATCH_SIZE);
+        // Run batch in parallel, await completion before next batch
+        await Promise.allSettled(batch.map((ind) => fetchIndicator(ind)));
+      }
+
+      // Generate presidential brief after all indicators done
+      await generateBrief();
+
+      // Update timestamp with completion time
+      const done = new Date();
+      if (tsEl) {
+        tsEl.textContent += ` · Selesai: ${done.toLocaleTimeString('id-ID')}`;
+      }
+
+      // Re-enable button
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove('spinning');
+      }
+
+      isRefreshing = false;
+    }
+
+    // ============================================================
+    // FOLLOW-UP: open a chat follow-up (if embedded in Claude)
+    //            or copy to clipboard as fallback
+    // ============================================================
+    function askFollowUp(text) {
+      // If running inside Claude artifact environment, sendPrompt exists
+      if (typeof window.sendPrompt === 'function') {
+        window.sendPrompt(text);
+        return;
+      }
+      // Fallback: copy to clipboard
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert('Pertanyaan disalin ke clipboard:\n\n' + text);
+        }).catch(() => {
+          alert('Pertanyaan tindak lanjut:\n\n' + text);
+        });
+      } else {
+        alert('Pertanyaan tindak lanjut:\n\n' + text);
+      }
+    }
+
+    // ============================================================
+    // UTILITIES
+    // ============================================================
+
+    // Escape HTML to prevent XSS from AI-generated content
+    function escapeHtml(str) {
+      if (typeof str !== 'string') return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Basic URL validation — allow only http/https
+    function isValidUrl(url) {
+      if (typeof url !== 'string' || !url) return false;
+      try {
+        const u = new URL(url);
+        return u.protocol === 'http:' || u.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    }
+
+    // ============================================================
+    // INIT: auto-start on page load
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      startRefresh();
+    });
+  </script>
+</body>
+</html>
